@@ -5,6 +5,8 @@ from email.mime.text import MIMEText
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 import os
+from dotenv import load_dotenv
+load_dotenv()
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
@@ -275,4 +277,5 @@ def logout():
 # === Main ===
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
