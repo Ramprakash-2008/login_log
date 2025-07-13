@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 import os
-from datetime import datetime
+from datetime import datetime, time
 import pytz
 from dotenv import load_dotenv
 load_dotenv()
@@ -202,22 +202,29 @@ def home():
 
 @app.route("/login", methods=["POST"])
 def login_user():
-    username = request.form.get("username").strip()
+    try:
+        username = request.form.get("username", "").strip()
+        if not username:
+            return "❌ Username required", 400
 
-    india = pytz.timezone("Asia/Kolkata")
-    now = datetime.now(india)
-    current_time = now.time()
-    deadline = time(hour=9, minute=0)
+        india = pytz.timezone("Asia/Kolkata")
+        now = datetime.now(india)
+        current_time = now.time()
+        deadline = time(hour=9, minute=0)
 
-    status = "Late" if current_time > deadline else "On-time"
-    log_time = now.strftime("%H:%M")
+        status = "Late" if current_time > deadline else "On-time"
+        log_time = now.strftime("%H:%M")
 
-    save_log(username, log_time, status)
+        save_log(username, log_time, status)
 
-    if status == "Late":
-        send_late_email(username, log_time)
+        if status == "Late":
+            send_late_email(username, log_time)
 
-    return f"✅ {username} logged in at {log_time} ({status})"
+        return f"✅ {username} logged in at {log_time} ({status})"
+
+    except Exception as e:
+        print("❌ ERROR in /login:", e)
+        return "Internal Server Error", 500
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
