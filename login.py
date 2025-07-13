@@ -215,7 +215,11 @@ def login_user():
         conn.close()
 
         if not result:
-            return "❌ You are not a registered user", 401
+            return render_template_string("""
+            <h2 style="color:red;">❌ You are not a registered user</h2>
+            <a href="/" style="text-decoration:none; font-size:18px;">🔙 Back to Login</a>
+            """)
+
 
         # ✅ Get India time
         india = pytz.timezone("Asia/Kolkata")
