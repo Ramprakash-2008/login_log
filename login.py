@@ -5,6 +5,8 @@ from email.mime.text import MIMEText
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 import os
+from datetime import datetime
+import pytz
 from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
@@ -201,12 +203,21 @@ def home():
 @app.route("/login", methods=["POST"])
 def login_user():
     username = request.form.get("username").strip()
-    now = datetime.now().strftime("%H:%M")
-    status = "Late" if now > DEADLINE_TIME else "On-time"
-    save_log(username, now, status)
+
+    india = pytz.timezone("Asia/Kolkata")
+    now = datetime.now(india)
+    current_time = now.time()
+    deadline = time(hour=9, minute=0)
+
+    status = "Late" if current_time > deadline else "On-time"
+    log_time = now.strftime("%H:%M")
+
+    save_log(username, log_time, status)
+
     if status == "Late":
-        send_late_email(username, now)
-    return f"✅ {username} logged in at {now} ({status})"
+        send_late_email(username, log_time)
+
+    return f"✅ {username} logged in at {log_time} ({status})"
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
