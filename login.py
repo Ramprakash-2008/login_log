@@ -207,6 +207,17 @@ def login_user():
         if not username:
             return "❌ Username required", 400
 
+        # ✅ Check if user is registered
+        conn = sqlite3.connect("users.db")
+        c = conn.cursor()
+        c.execute("SELECT username FROM users WHERE username=?", (username,))
+        result = c.fetchone()
+        conn.close()
+
+        if not result:
+            return "❌ You are not a registered user", 401
+
+        # ✅ Get India time
         india = pytz.timezone("Asia/Kolkata")
         now = datetime.now(india)
         current_time = now.time()
@@ -215,8 +226,10 @@ def login_user():
         status = "Late" if current_time > deadline else "On-time"
         log_time = now.strftime("%H:%M")
 
+        # ✅ Save to log
         save_log(username, log_time, status)
 
+        # ✅ Send email if late
         if status == "Late":
             send_late_email(username, log_time)
 
@@ -225,6 +238,7 @@ def login_user():
     except Exception as e:
         print("❌ ERROR in /login:", e)
         return "Internal Server Error", 500
+
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
