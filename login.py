@@ -4,14 +4,15 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill
-
+import os
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
 # === CONFIG ===
-ADMIN_PASSWORD = "admin123"
-ADMIN_EMAIL = "rramp762008@gmail.com"          # <-- Replace this
-EMAIL_PASSWORD = "jsrzqaydlxdfbiwj"          # <-- Replace this
+ADMIN_PASSWORD = os.getenv("ADMIN_PASS")
+ADMIN_EMAIL = os.getenv("EMAIL_USER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASS")
+          # <-- Replace this
 DATABASE = "users.db"
 LOG_FILE = "login_log.csv"
 DEADLINE_TIME = "09:00"
