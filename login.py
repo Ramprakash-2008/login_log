@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
-
+ 
 # === CONFIG ===
 ADMIN_PASSWORD = os.getenv("ADMIN_PASS")
 ADMIN_EMAIL = os.getenv("EMAIL_USER")
@@ -129,7 +129,7 @@ def init_db():
     cur.execute("CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE)")
     conn.commit()
     conn.close()
-
+init_db()
 def get_users():
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
