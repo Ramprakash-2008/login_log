@@ -28,6 +28,7 @@ LOGIN_TEMPLATE = """
     Password: <input type="password" name="password">
     <button type="submit">Login</button>
 </form>
+<a href="/">⬅ Back to Login</a>
 """
 
 ADMIN_TEMPLATE = """
@@ -60,6 +61,9 @@ ADMIN_TEMPLATE = """
     </form>
     <form method="GET" action="/download-log" style="display:inline;">
         <button>📥 Download Excel Log</button>
+    </form>
+    <form method="GET" action="/logout" style="display:inline;">
+        <button>🔒 Logout</button>
     </form>
 </div>
 
@@ -165,6 +169,9 @@ def send_late_email(username, login_time):
 
 @app.route("/download-log")
 def download_excel():
+    if not session.get("logged_in"):
+        return redirect("/admin/login")
+
     if not os.path.exists(LOG_FILE):
         return "Log file not found."
 
@@ -198,6 +205,7 @@ def home():
         Username: <input type="text" name="username">
         <button type="submit">Login</button>
     </form>
+    <a href="/admin/login">🔐 Admin Login</a>
     """
 
 @app.route("/login", methods=["POST"])
@@ -207,7 +215,6 @@ def login_user():
         if not username:
             return "❌ Username required", 400
 
-        # ✅ Check if user is registered
         conn = sqlite3.connect("users.db")
         c = conn.cursor()
         c.execute("SELECT username FROM users WHERE username=?", (username,))
@@ -216,12 +223,10 @@ def login_user():
 
         if not result:
             return render_template_string("""
-            <h2 style="color:red;">❌ You are not a registered user</h2>
-            <a href="/" style="text-decoration:none; font-size:18px;">🔙 Back to Login</a>
+            <h2 style=\"color:red;\">❌ You are not a registered user</h2>
+            <a href=\"/\" style=\"text-decoration:none; font-size:18px;\">🔙 Back to Login</a>
             """)
 
-
-        # ✅ Get India time
         india = pytz.timezone("Asia/Kolkata")
         now = datetime.now(india)
         current_time = now.time()
@@ -230,10 +235,8 @@ def login_user():
         status = "Late" if current_time > deadline else "On-time"
         log_time = now.strftime("%H:%M")
 
-        # ✅ Save to log
         save_log(username, log_time, status)
 
-        # ✅ Send email if late
         if status == "Late":
             send_late_email(username, log_time)
 
@@ -242,7 +245,6 @@ def login_user():
     except Exception as e:
         print("❌ ERROR in /login:", e)
         return "Internal Server Error", 500
-
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
@@ -299,6 +301,11 @@ def admin_login():
         if request.form["password"] == ADMIN_PASSWORD:
             session["logged_in"] = True
             return redirect("/admin")
+        else:
+            return render_template_string("""
+                <h2 style=\"color:red;\">❌ Incorrect Password</h2>
+                <a href=\"/admin/login\">🔁 Try Again</a>
+            """)
     return render_template_string(LOGIN_TEMPLATE)
 
 @app.route("/users")
@@ -313,5 +320,3 @@ def logout():
 # === Main ===
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
-
